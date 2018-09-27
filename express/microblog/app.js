@@ -3,6 +3,7 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var util = require('util');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -37,5 +38,16 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
+
+// app 静态视图助手
+// 静态视图助手变量
+app.locals.appName = 'NodeExpressBlog';
+app.locals.sayHello = function(){
+  return 'Welcome to my NodeExpressBlog';
+}
+app.locals.inspect = function(obj){
+  return util.inspect(obj, true);
+}
+
 
 module.exports = app;
