@@ -1,8 +1,8 @@
-var User = require('../models/user')
-var Post = require('../models/post')
-var express = require('express');
-var router = express.Router();
-var crypto = require('crypto');
+var User = require('../models/user'),
+  Post = require('../models/post'),
+  express = require('express'),
+  crypto = require('crypto');
+  router = express.Router(),
 
 
 // 正式微博路由
