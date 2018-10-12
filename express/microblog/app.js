@@ -5,11 +5,10 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var util = require('util');
 var flash = require('connect-flash');
-
+var bodyParser = require('body-parser');
 var session = require('express-session');
 var MongoStore = require('connect-mongo')(session);
 var settings = require('./settings');
-
 
 
 
@@ -35,6 +34,8 @@ app.use(express.urlencoded({ extended: false }));
 // 定义cookie解析器
 app.use(cookieParser());
 
+app.use(bodyParser.urlencoded());
+
 // express.cookieParser()  是 Cookie 解析的中间件。 express.session()  则
 // 提供会话支持，设置它的  store  参数为  MongoStore  实例，把会话信息存储到数据库中，
 // 以避免丢失。
@@ -47,6 +48,18 @@ app.use(session({
     url: settings.url,
   })
 }));
+
+app.use(function(req, res, next){
+  console.log("app.usr local");
+  res.locals.user = req.session.user;
+  res.locals.post = req.session.post;
+  var error = req.flash('error');
+  res.locals.error = error.length ? error : null;
+ 
+  var success = req.flash('success');
+  res.locals.success = success.length ? success : null;
+  next();
+});
 
 // 定义静态文件目录
 app.use(express.static(path.join(__dirname, 'public')));

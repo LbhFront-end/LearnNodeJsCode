@@ -6,6 +6,11 @@ function User(user) {
 };
 module.exports = User;
 
+
+/*
+ * 保存一个用户到数据库
+ * @param {Function} callback: 执行完数据库操作的应该执行的回调函数
+ */
 User.prototype.save = function save(callback) {
     // 存入 Mongodb 的文档
     var user = {
@@ -22,9 +27,9 @@ User.prototype.save = function save(callback) {
                 mongodb.close();
                 return callback(err);
             }
-            // 为 name 属性添加索引
+            //为name属性添加索引，新版本的ensureIndex方法需要一个回调函数
             collection.ensureIndex('name', { unique: true });
-            // 写入 user 文档
+            //写入user文档
             collection.insert(user, { safe: true }, function (err, user) {
                 mongodb.close();
                 callback(err, user);
@@ -32,6 +37,13 @@ User.prototype.save = function save(callback) {
         });
     });
 }
+
+
+/*
+ * 查询在集合`users`是否存在一个制定用户名的用户
+ * @param {String} username: 需要查询的用户的名字 
+ * @param {Function} callback: 执行完数据库操作的应该执行的回调函数
+ */
 
 User.get = function get(username, callback) {
     mongodb.open(function (err, db) {

@@ -1,29 +1,22 @@
 var User = require('../models/user')
+var Post = require('../models/post')
 var express = require('express');
 var router = express.Router();
 var crypto = require('crypto');
-var util = require('util');
 
-
-// 动态视图助手
-router.use(function (req, res, next) {
-  res.locals.user = req.session.user;
-  var err = req.flash('error');
-  var success = req.flash('success');
-
-  res.locals.error = err.length ? err : null;
-  res.locals.success = success.length ? success : null;
-
-  next();
-});
 
 // 正式微博路由
 router.get('/', function (req, res, next) {
-  res.render('index', { title: '首页' });
-});
-// 用户的主页 
-router.get('/u/:user', function (req, res, next) {
-
+  Post.get(null, function (err, posts) {
+    if (err) {
+      posts = [];
+    }
+    res.render('index', {
+      title: '首页',
+      posts: posts,
+      user: req.session.user,
+    });
+  });
 });
 // 用户注册
 router.get('/reg', checkNotLogin);
@@ -89,6 +82,42 @@ router.post('/login', function (req, res, next) {
     res.redirect('/');
   });
 });
+
+// 用户发表微博
+router.post('/post', checkLogin);
+router.post('/post', function (req, res) {
+  var currentUser = req.session.user;
+  var post = new Post(currentUser.name, req.body.post);
+  post.save(function (err) {
+    if (err) {
+      req.flash('error', err);
+      return res.redirect('/');
+    }
+    req.flash('success', '发表成功');
+    res.redirect('/u/' + currentUser.name);
+  });
+});
+
+// 用户的主页 
+router.get('/u/:user', function (req, res) {
+  User.get(req.params.user, function (err, user) {
+    if (!user) {
+      req.flash('error', '用户不存在');
+      return res.redirect('/');
+    }
+    Post.get(user.name, function (err, posts) {
+      console.log(posts);
+      if (err) {
+        req.flash('error', err);
+        return res.redirect('/');
+      }
+      res.render('user', {
+        title: user.name,
+        posts: posts,
+      });
+    });
+  });
+});
 // 用户登出 
 router.get('/logout', checkLogin);
 router.get('/logout', function (req, res, next) {
@@ -98,16 +127,16 @@ router.get('/logout', function (req, res, next) {
 });
 
 function checkLogin(req, res, next) {
-  if(!req.session.user){
-    req.flash('error','未登入');
+  if (!req.session.user) {
+    req.flash('error', '未登入');
     return res.redirect('/login');
   }
   next();
 }
 
-function checkNotLogin(req, res, next){
-  if(req.session.user){
-    req.flash('error','已登入');
+function checkNotLogin(req, res, next) {
+  if (req.session.user) {
+    req.flash('error', '已登入');
     return res.redirect('/');
   }
   next();
