@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>loading</title>
+	<script>
+		window.loadingStartTime = new Date();
+	</script>
+	<style>
+	.loading{
+		display: table;
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-color: #fff;
+		z-index: 5;
+	}
+	.loading .progress{
+		display: table-cell;
+		vertical-align: middle;
+		text-align: center;
+	}
+</style>
+</head>
+<body>
+	<div class="loading" id="loading">
+		<div class="progress" id="progress">0%</div>
+	</div>
+</body>
+<script src="https://cdn.bootcss.com/jquery/2.2.4/jquery.js"></script>
+<script>
+	var $loading = $('#loading'),
+	$progress = $('#progress'),
+	prg = 0,
+	timer = 0,
+	now = new Date(), // 记录当前时间
+	timeout = 5000, // 超时时间
+	next = prg;
+
+
+	add([30,50],[1,3],100); // 第一阶段
+	window.setTimeout(() =>{ // 模拟图a加载完
+		add(20,[1,3],200);
+	},1000);	
+	window.setTimeout(() =>{ // 模拟图c加载完
+		add(30,[1,3],200);
+	},2000);	
+	window.setTimeout(() =>{ // 模拟图b加载完
+		add(25,[1,3],200);
+	},2500);
+
+	// 超时
+	window.onload = () =>{
+		complete();
+	}
+	if(now-loadingStartTime > timeout){ // 超时
+		complete();
+	}else{
+		window.setTimeout(() =>{ // 未超时，则等待时间
+			complete();
+		},timeout - (now - loadingStartTime));
+	}
+
+	/**
+	 **@param dist loading结束的值或者数组值间
+	 **@param speed loading的速度
+	 **@param delay 延迟时间
+	 **@param callback 回调函数
+	 */
+	// progress([80, 90], [1, 3], 100); // 使用数组来表示随机数的区间
+
+	function progress(dist,speed,delay,callback){
+		var _speed = random(speed),
+		_delay = random(delay);
+		window.clearInterval(timer);
+		timer = window.setTimeout(()=>{
+			if(prg + _speed >= dist){ // 进度+速度大于期望得到的值
+				window.clearInterval(timer); // 清除定时器
+				prg = dist; // 重新赋值为dist
+				callback && callback(); // 回调函数
+			}else{
+				prg+= _speed
+				arguments.callee(dist,speed,delay,callback); // 重新调用自身
+			}
+			$progress.html(parseInt(prg) + '%'); // 渲染progress的进度，由于已经不是自增1，所以这里要取整
+			console.log(prg);
+		},_delay);
+	}
+
+	function add(dist,speed,delay,callback){
+		var _dist = random(dist);
+		if(next + _dist > 100){ //对超出部分裁剪对齐
+			next = 100;
+		}else{
+			next += _dist;
+		}
+		progress(next,speed,delay,callback);
+	}
+
+	function random(n){ // 随意数：数组间得返回一个值或者直接返回单个值值
+		if(typeof n === 'object'){
+			var times = n[1] - n[0],
+			offset = n[0];
+			return Math.random()*times + offset;
+		}else{
+			return n;
+		}
+	}
+
+	function complete(){ // 完成进度功能
+		progress(100,[1,5],10,()=>{
+			window.setTimeout(()=>{ // 延迟一秒消失
+				$loading.hide();
+			},1000)
+		});
+	}
+
+</script>
+</html>
+
+<!-- 	timer = window.setInterval(() =>{
+		if(prg >= 80){
+			window.clearInterval(timer)
+			prg = 100
+		}else{
+			prg++
+		}
+		$progress.html(prg+'%');
+		console.log(prg);
+	},100);
+	window.onload = () => {
+		window.clearInterval(timer);
+		window.setInterval(()=>{
+			if(prg>=100){
+				window.clearInterval(timer);
+				prg = 100;
+				$loading.hide();
+			}else{
+				prg++
+			}
+			$progress.html(prg+'%');
+			console.log(prg);			
+		},10);		
+	}; -->
